@@ -17,20 +17,22 @@ import android.view.View
 class Basketball(context: Context?, attrs: AttributeSet?) : View(context, attrs) {
 
     val paint: Paint = Paint()
-    val animation:ValueAnimator
-    val ball:Bitmap
+    val animation: ValueAnimator
+    val ball: Bitmap
     val basket: Bitmap
 
+    var ballX = 0
+    var ballY = 0
+    var radius = 200f
+
     init {
-        paint.color = Color.GRAY
+        paint.color = Color.WHITE
 
         paint.maskFilter = BlurMaskFilter(20f, BlurMaskFilter.Blur.NORMAL)
 
         animation = ValueAnimator.ofFloat(200f, 100f)
         animation.duration = 300
         animation.addUpdateListener {
-
-
             radius = it.animatedValue as Float
             invalidate()
         }
@@ -39,38 +41,51 @@ class Basketball(context: Context?, attrs: AttributeSet?) : View(context, attrs)
 
         ball = BitmapFactory.decodeResource(resources, R.drawable.basketball)
         basket = BitmapFactory.decodeResource(resources, R.drawable.basket)
-
-
-
     }
 
-    var radius = 200f
+    override fun onSizeChanged(w: Int, h: Int, oldw: Int, oldh: Int) {
+        super.onSizeChanged(w, h, oldw, oldh)
+
+        // Inicializar ballX y ballY con las coordenadas del centro de la pantalla
+        ballX = w / 2
+        ballY = h / 2
+    }
+
     @SuppressLint("DrawAllocation")
     override fun onDraw(canvas: Canvas) {
         canvas.drawColor(Color.WHITE)
-          canvas.drawCircle((width/2).toFloat(), (height/2).toFloat(), radius, paint)
-          canvas.drawBitmap(ball,  Rect(0,0,ball.width,ball.height), Rect(
-              (width/2-radius).toInt(), (height/2-radius).toInt(), (width/2+radius).toInt(),
-              (height/2+radius).toInt()), paint)
+        canvas.drawCircle((width / 2).toFloat(), (height / 2).toFloat(), radius, paint)
+        canvas.drawBitmap(
+            ball, Rect(0, 0, ball.width, ball.height), Rect(
+                (ballX - radius).toInt(), (ballY - radius).toInt(), (ballX + radius).toInt(),
+                (ballY + radius).toInt()
+            ), paint
+        )
 
-          canvas.drawBitmap(basket,Rect(0,0,basket.width,basket.height), Rect(
-              width/2-200,0,width/2+200,400
-          ),null)
+        canvas.drawBitmap(
+            basket, Rect(0, 0, basket.width, basket.height), Rect(
+                width / 2 - 200, 0, width / 2 + 200, 400
+            ), null
+        )
+
+        canvas.drawBitmap(
+            basket, Rect(0, 0, basket.width, basket.height), Rect(
+                width / 2 - 200, height - 400, width / 2 + 200, height
+            ), null
+        )
 
     }
 
     @SuppressLint("ClickableViewAccessibility")
     override fun onTouchEvent(event: MotionEvent): Boolean {
-        return if(event.action == MotionEvent.ACTION_DOWN){
-
-            animation.start()
-
-            true
-        } else {
-
-            false
+        when (event.action) {
+            MotionEvent.ACTION_MOVE -> {
+                ballX = event.x.toInt()
+                ballY = event.y.toInt()
+                animation.start()
+            }
         }
-
+        invalidate()  // Solicitar que se vuelva a dibujar la vista
+        return true
     }
-
 }
